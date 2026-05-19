@@ -666,7 +666,14 @@ export const ApiService = {
             headers: { 'Authorization': `KakaoAK ${kKey}` }
           });
           
-          if (!response.ok) return [];
+          if (!response.ok) {
+            console.error(`[AeroPlace Place Engine Error] 카카오 카테고리 API 호출 실패 (Status: ${response.status})`);
+            try {
+              const errBody = await response.json();
+              console.error(`[카카오 추천 에러 상세 피드백]:`, errBody.message);
+            } catch (_) {}
+            return [];
+          }
           const data = await response.json();
           return data.documents || [];
         });
