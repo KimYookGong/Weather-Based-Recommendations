@@ -21,8 +21,8 @@
   <script>
     window.process = window.process || {};
     window.process.env = window.process.env || {};
-    window.process.env.REACT_APP_WEATHER_KEY = window.process.env.REACT_APP_WEATHER_KEY || "";
-    window.process.env.REACT_APP_KAKAO_KEY = window.process.env.REACT_APP_KAKAO_KEY || "";
+    window.process.env.REACT_APP_WEATHER_KEY = window.process.env.REACT_APP_WEATHER_KEY || "__REACT_APP_WEATHER_KEY__";
+    window.process.env.REACT_APP_KAKAO_KEY = window.process.env.REACT_APP_KAKAO_KEY || "__REACT_APP_KAKAO_KEY__";
   </script>
 </head>
 <body class="weather-clear"> <!-- 날씨 상태에 따라 weather-clear, weather-rainy, weather-cloudy, weather-snowy, weather-night 등으로 동적 변경 -->

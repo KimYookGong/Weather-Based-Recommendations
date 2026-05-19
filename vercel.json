@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "buildCommand": "sed -i \"s|__REACT_APP_WEATHER_KEY__|${REACT_APP_WEATHER_KEY}|g\" index.html && sed -i \"s|__REACT_APP_KAKAO_KEY__|${REACT_APP_KAKAO_KEY}|g\" index.html",
+  "outputDirectory": "."
+}
