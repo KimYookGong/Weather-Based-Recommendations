@@ -371,6 +371,12 @@ export const ApiService = {
       throw new Error('KAKAO_KEY_MISSING');
     }
     
+    // [보안 안전 마스킹 디버그 로그]: 브라우저 개발자 도구(F12) 콘솔에서 실제로 API를 찌르는 카카오 키의 실시간 유입 형태를 즉석 판독하게 합니다.
+    const maskedKey = kKey.length > 8 
+      ? kKey.substring(0, 4) + '...' + kKey.substring(kKey.length - 4) 
+      : 'Short/InvalidKey';
+    console.warn(`[AeroPlace API Debug] 카카오 로컬 API 요청 전송 키 (마스킹): [${maskedKey}] (총 길이: ${kKey.length}자)`);
+
     // 1차 주소 검색 시도
     let url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`;
     
