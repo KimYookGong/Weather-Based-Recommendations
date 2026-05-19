@@ -25,9 +25,9 @@ export class SettingsModal {
       <div class="modal-content glass">
         <!-- 모달 헤더 -->
         <div class="modal-header">
-          <h3 class="modal-title">
-            <i data-lucide="settings" style="color: #a78bfa;"></i>
-            지역 설정 & 데모 시뮬레이터
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="map-pin" style="color: #6366f1;"></i>
+            실시간 지역 설정
           </h3>
           <button id="modal-close" class="close-button" title="닫기">
             <i data-lucide="x" style="width: 24px; height: 24px;"></i>
@@ -46,48 +46,10 @@ export class SettingsModal {
           <span class="settings-help">※ GPS 위치 연동이 제한되는 환경이거나 특정 위치의 실시간 기상 상태를 직접 검색하여 연동할 수 있습니다.</span>
         </div>
 
-        <div class="settings-divider"></div>
-
-        <!-- 핵심: 데모 날씨 시뮬레이터 (Developer & Demo Mode) -->
-        <div class="settings-group">
-          <h4 class="simulator-title">🌤️ 데모 날씨 시뮬레이터 (개발자용)</h4>
-          <span class="settings-help" style="margin-bottom: 8px;">날씨 API 연동 없이 클릭 한 번으로 모든 날씨 추천 정합성을 강제 변경하며 실시간 시뮬레이션할 수 있습니다.</span>
-          <div class="simulator-grid">
-            <button class="sim-button ${currentSettings.activeSimId === 'clear' ? 'active' : ''}" data-sim="clear">
-              <i data-lucide="sun" class="sim-icon" style="color: #fbbf24;"></i>
-              <span>맑음 (봄/가을)</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'rainy' ? 'active' : ''}" data-sim="rainy">
-              <i data-lucide="cloud-rain" class="sim-icon" style="color: #60a5fa;"></i>
-              <span>비 (우천)</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'cloudy' ? 'active' : ''}" data-sim="cloudy">
-              <i data-lucide="cloud" class="sim-icon" style="color: #94a3b8;"></i>
-              <span>흐림</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'snowy' ? 'active' : ''}" data-sim="snowy">
-              <i data-lucide="snowflake" class="sim-icon" style="color: #a5f3fc;"></i>
-              <span>눈 (겨울)</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'extremely_hot' ? 'active' : ''}" data-sim="extremely_hot">
-              <i data-lucide="thermometer" class="sim-icon" style="color: #f43f5e;"></i>
-              <span>폭염 (33°C↑)</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'extremely_cold' ? 'active' : ''}" data-sim="extremely_cold">
-              <i data-lucide="wind" class="sim-icon" style="color: #38bdf8;"></i>
-              <span>한파 (-9°C↓)</span>
-            </button>
-            <button class="sim-button ${currentSettings.activeSimId === 'night' ? 'active' : ''}" data-sim="night">
-              <i data-lucide="moon" class="sim-icon" style="color: #a78bfa;"></i>
-              <span>맑은 밤</span>
-            </button>
-          </div>
-        </div>
-
         <!-- 푸터 저장 버튼 -->
-        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
           <button id="btn-save-settings" class="primary-button">
-            저장 및 적용 <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+            검색 및 적용 <i data-lucide="check" style="width: 16px; height: 16px;"></i>
           </button>
         </div>
       </div>
@@ -120,7 +82,6 @@ export class SettingsModal {
     const btnClose = this.container.querySelector('#modal-close');
     const btnSave = this.container.querySelector('#btn-save-settings');
     const inputCitySearch = this.container.querySelector('#input-city-search');
-    const simButtons = this.container.querySelectorAll('.sim-button');
 
     // 1. 닫기 핸들러
     btnClose.addEventListener('click', () => this.hide());
@@ -147,32 +108,10 @@ export class SettingsModal {
       
       if (this.onSave) {
         this.onSave({
-          citySearch: cityVal,
-          simId: null // 시뮬레이터를 끈 실제 날씨 모드
+          citySearch: cityVal
         });
       }
       this.hide();
-    });
-
-    // 3. 시뮬레이터 날씨 선택 핸들러
-    simButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const simId = e.currentTarget.getAttribute('data-sim');
-        
-        // 클릭 즉시 활성화 표시 및 다른 버튼 해제
-        simButtons.forEach(b => b.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-
-        if (this.onSave) {
-          this.onSave({
-            citySearch: '', // 시뮬레이터 우선으로 하므로 검색 비움
-            simId: simId
-          });
-        }
-        
-        // 자연스럽게 닫기 딜레이를 주어 변경 사항을 시각적으로 인지하게 함
-        setTimeout(() => this.hide(), 250);
-      });
     });
   }
 }

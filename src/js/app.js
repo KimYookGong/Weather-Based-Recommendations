@@ -23,7 +23,6 @@ class App {
       weatherData: null,
       places: [],
       currentFilter: 'all',
-      activeSimId: null,      // 시뮬레이터 날씨 ID ('clear', 'rainy' 등)
       searchCity: '',         // 수동 검색한 도시 이름
       isCoordsDetected: false,
       lastCoords: null        // 감지된 마지막 위/경도 {lat, lon}
@@ -60,9 +59,7 @@ class App {
   async init() {
     // A. 글로벌 버튼 핸들러 설정
     this.dom.btnSettings.addEventListener('click', () => {
-      this.settingsModal.show({
-        activeSimId: this.state.activeSimId
-      });
+      this.settingsModal.show();
     });
 
     // B. Geolocation 비동기 감지 실행 (초기 1회 시도)
@@ -105,24 +102,10 @@ class App {
     try {
       let weather = null;
 
-      // 1. 날씨 데이터 비동기 조회 (상태 조건별 다중 분기)
+      // 1. 날씨 데이터 비동기 조회 (실시간 하이브리드 분기)
       
-      // 분기 [A]: 데모 시뮬레이터가 강제 활성화된 경우 (우선순위 최고)
-      if (this.state.activeSimId) {
-        const simNameMap = {
-          clear: '서울 (맑음 데모)',
-          rainy: '인천 (비 데모)',
-          cloudy: '제주 (흐림 데모)',
-          snowy: '평창 (눈 데모)',
-          extremely_hot: '대구 (폭염 데모)',
-          extremely_cold: '철원 (한파 데모)',
-          night: '부산 (야경 데모)'
-        };
-        const demoCity = simNameMap[this.state.activeSimId] || '서울 (데모)';
-        weather = await ApiService.getMockWeather(this.state.activeSimId, demoCity);
-      } 
-      // 분기 [B]: 사용자가 직접 검색창에 특정 도시를 입력한 경우
-      else if (this.state.searchCity) {
+      // 분기 [A]: 사용자가 직접 검색창에 특정 지역을 입력한 경우 (우선순위 최고)
+      if (this.state.searchCity) {
         const owmKey = this.state.apiKey || ApiService.getOwmApiKey();
         if (!owmKey) {
           throw new Error('API_KEY_REQUIRED_FOR_SEARCH');
@@ -133,7 +116,7 @@ class App {
           this.state.kakaoKey
         );
       } 
-      // 분기 [C]: 사용자의 위도/경도가 감지되었고 실제 API 키가 있는 경우
+      // 분기 [B]: 사용자의 위도/경도가 감지되었고 실제 OWM API 키가 있는 경우 (GPS 기반 실시간 날씨)
       else if (this.state.isCoordsDetected && this.state.lastCoords && (this.state.apiKey || ApiService.getOwmApiKey())) {
         weather = await ApiService.fetchWeatherByCoords(
           this.state.lastCoords.lat,
@@ -141,10 +124,16 @@ class App {
           this.state.apiKey || ApiService.getOwmApiKey()
         );
       } 
-      // 분기 [D]: 그 외의 경우 (기본 위치 기반 데모 모드 자동 구동)
+      // 분기 [C]: 그 외의 경우 (앱 최초 진입 시 기본 서울 실시간 날씨 및 명소 연동)
       else {
-        // GPS 위치 감지는 되었으나 API Key가 없는 경우도 서울 데모 맑음 반환
-        weather = await ApiService.getMockWeather('clear', '서울 (데모 모드)');
+        const owmKey = this.state.apiKey || ApiService.getOwmApiKey();
+        if (owmKey) {
+          // 실제 API 키가 존재하므로 진짜 서울의 실시간 날씨와 명소를 페치해옴!
+          weather = await ApiService.fetchWeatherByCity('Seoul', owmKey);
+        } else {
+          // 만약 API 키가 누락되어 비정상 동작할 위험이 있을 때만 가이드용 기본 맑음 반환
+          weather = await ApiService.getMockWeather('clear', '서울 (키 미등록 상태)');
+        }
       }
 
       this.state.weatherData = weather;
@@ -211,14 +200,11 @@ class App {
   }
 
   /**
-   * 설정 변경 및 시뮬레이터 트리거 수신 핸들러
+   * 설정 변경 및 지역 검색 수신 핸들러
    */
   handleSaveSettings(settings) {
     // 1. 수동 검색어 바인딩
     this.state.searchCity = settings.citySearch;
-
-    // 2. 시뮬레이션 ID 바인딩
-    this.state.activeSimId = settings.simId;
 
     // 필터 초기화
     this.state.currentFilter = 'all';
@@ -353,18 +339,16 @@ class App {
     const btnSettings = document.getElementById('btn-err-settings');
     if (btnSettings) {
       btnSettings.addEventListener('click', () => {
-        this.settingsModal.show({
-          activeSimId: this.state.activeSimId
-        });
+        this.settingsModal.show();
       });
     }
 
-    // 3. 데모 모드로 강제 스위칭 복구
+    // 3. 서울 실시간 기상으로 안전 복구
     const btnDemo = document.getElementById('btn-err-demo');
     if (btnDemo) {
+      btnDemo.innerHTML = `<i data-lucide="sun" style="width: 16px; height: 16px; margin-right: 4px;"></i> 서울 실시간 날씨로 복구`;
       btnDemo.addEventListener('click', () => {
-        this.state.activeSimId = 'clear';
-        this.state.searchCity = '';
+        this.state.searchCity = 'Seoul';
         this.updateAppFlow();
       });
     }
