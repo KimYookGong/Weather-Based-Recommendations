@@ -16,9 +16,9 @@ export class SettingsModal {
 
   /**
    * 모달 열기 및 렌더링
-   * @param {Object} currentSettings - { apiKey: string, kakaoKey: string, activeSimId: string }
+   * @param {Object} currentSettings - { activeSimId: string }
    */
-  show(currentSettings = { apiKey: '', kakaoKey: '', activeSimId: '' }) {
+  show(currentSettings = { activeSimId: '' }) {
     if (!this.container) return;
 
     this.container.innerHTML = `
@@ -27,36 +27,11 @@ export class SettingsModal {
         <div class="modal-header">
           <h3 class="modal-title">
             <i data-lucide="settings" style="color: #a78bfa;"></i>
-            환경 설정 & 데모 시뮬레이터
+            지역 설정 & 데모 시뮬레이터
           </h3>
           <button id="modal-close" class="close-button" title="닫기">
             <i data-lucide="x" style="width: 24px; height: 24px;"></i>
           </button>
-        </div>
-
-        <!-- 모달 바디 설정 섹션 - OWM 키 -->
-        <div class="settings-group">
-          <label class="settings-label" for="input-api-key">
-            <span>OpenWeatherMap API Key</span>
-            <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #60a5fa; text-decoration: none;">키 발급 받기 <i data-lucide="arrow-up-right" style="width: 10px; height: 10px;"></i></a>
-          </label>
-          <div class="settings-input-wrapper">
-            <i data-lucide="key" class="settings-input-icon"></i>
-            <input type="password" id="input-api-key" class="settings-input" placeholder="OpenWeatherMap API Key를 입력해주세요." value="${currentSettings.apiKey || ''}">
-          </div>
-        </div>
-
-        <!-- 모달 바디 설정 섹션 - Kakao REST 키 -->
-        <div class="settings-group">
-          <label class="settings-label" for="input-kakao-key">
-            <span>Kakao Local REST API Key</span>
-            <a href="https://developers.kakao.com" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #60a5fa; text-decoration: none;">키 발급 받기 <i data-lucide="arrow-up-right" style="width: 10px; height: 10px;"></i></a>
-          </label>
-          <div class="settings-input-wrapper">
-            <i data-lucide="shield" class="settings-input-icon"></i>
-            <input type="password" id="input-kakao-key" class="settings-input" placeholder="Kakao REST API Key를 입력해주세요." value="${currentSettings.kakaoKey || ''}">
-          </div>
-          <span class="settings-help">※ 입력한 API 키들은 브라우저 LocalStorage에 안전하게 저장됩니다. 입력이 없거나 환경변수 비활성 시에는 풍부한 고품질 데모 시뮬레이션 모드로 작동합니다.</span>
         </div>
 
         <!-- 수동 도시 검색 (Geolocation 장애 대비) -->
@@ -68,7 +43,7 @@ export class SettingsModal {
             <i data-lucide="search" class="settings-input-icon"></i>
             <input type="text" id="input-city-search" class="settings-input" placeholder="예: 여의도동, 망원동, 마포구, Seoul, Tokyo 등">
           </div>
-          <span class="settings-help">※ GPS 위치 연동이 제한되는 환경이거나 다른 특정 위치의 실시간 기상 상태를 관측하고 싶을 때 유용합니다. (한글 검색은 Kakao API 키 등록 필요)</span>
+          <span class="settings-help">※ GPS 위치 연동이 제한되는 환경이거나 특정 위치의 실시간 기상 상태를 직접 검색하여 연동할 수 있습니다.</span>
         </div>
 
         <div class="settings-divider"></div>
@@ -144,8 +119,6 @@ export class SettingsModal {
   bindEvents() {
     const btnClose = this.container.querySelector('#modal-close');
     const btnSave = this.container.querySelector('#btn-save-settings');
-    const inputApiKey = this.container.querySelector('#input-api-key');
-    const inputKakaoKey = this.container.querySelector('#input-kakao-key');
     const inputCitySearch = this.container.querySelector('#input-city-search');
     const simButtons = this.container.querySelectorAll('.sim-button');
 
@@ -170,14 +143,10 @@ export class SettingsModal {
 
     // 2. 저장 및 적용 핸들러
     btnSave.addEventListener('click', () => {
-      const keyVal = inputApiKey.value.trim();
-      const kakaoVal = inputKakaoKey.value.trim();
       const cityVal = inputCitySearch.value.trim();
       
       if (this.onSave) {
         this.onSave({
-          apiKey: keyVal,
-          kakaoKey: kakaoVal,
           citySearch: cityVal,
           simId: null // 시뮬레이터를 끈 실제 날씨 모드
         });
@@ -196,8 +165,6 @@ export class SettingsModal {
 
         if (this.onSave) {
           this.onSave({
-            apiKey: inputApiKey.value.trim(),
-            kakaoKey: inputKakaoKey.value.trim(),
             citySearch: '', // 시뮬레이터 우선으로 하므로 검색 비움
             simId: simId
           });

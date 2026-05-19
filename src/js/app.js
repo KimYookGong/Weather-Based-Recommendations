@@ -12,10 +12,10 @@ import { SettingsModal } from './components/SettingsModal.js';
 
 class App {
   constructor() {
-    // 1. 글로벌 상태 (State) 초기화
+    // 1. 글로벌 상태 (State) 초기화 (기밀 키는 오직 환경 변수 빌드 주입을 바라봅니다)
     this.state = {
-      apiKey: localStorage.getItem('aeroplace_api_key') || '',
-      kakaoKey: localStorage.getItem('aeroplace_kakao_key') || '',
+      apiKey: ApiService.getOwmApiKey(),
+      kakaoKey: ApiService.getKakaoApiKey(),
       weatherData: null,
       places: [],
       currentFilter: 'all',
@@ -57,8 +57,6 @@ class App {
     // A. 글로벌 버튼 핸들러 설정
     this.dom.btnSettings.addEventListener('click', () => {
       this.settingsModal.show({
-        apiKey: this.state.apiKey,
-        kakaoKey: this.state.kakaoKey,
         activeSimId: this.state.activeSimId
       });
     });
@@ -212,26 +210,10 @@ class App {
    * 설정 변경 및 시뮬레이터 트리거 수신 핸들러
    */
   handleSaveSettings(settings) {
-    // 1. OWM API 키 저장 (LocalStorage 동기화)
-    this.state.apiKey = settings.apiKey;
-    if (settings.apiKey) {
-      localStorage.setItem('aeroplace_api_key', settings.apiKey);
-    } else {
-      localStorage.removeItem('aeroplace_api_key');
-    }
-
-    // 2. Kakao API 키 저장 (LocalStorage 동기화)
-    this.state.kakaoKey = settings.kakaoKey;
-    if (settings.kakaoKey) {
-      localStorage.setItem('aeroplace_kakao_key', settings.kakaoKey);
-    } else {
-      localStorage.removeItem('aeroplace_kakao_key');
-    }
-
-    // 3. 수동 검색어 바인딩
+    // 1. 수동 검색어 바인딩
     this.state.searchCity = settings.citySearch;
 
-    // 4. 시뮬레이션 ID 바인딩
+    // 2. 시뮬레이션 ID 바인딩
     this.state.activeSimId = settings.simId;
 
     // 필터 초기화
@@ -368,8 +350,6 @@ class App {
     if (btnSettings) {
       btnSettings.addEventListener('click', () => {
         this.settingsModal.show({
-          apiKey: this.state.apiKey,
-          kakaoKey: this.state.kakaoKey,
           activeSimId: this.state.activeSimId
         });
       });
