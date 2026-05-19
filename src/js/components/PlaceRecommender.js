@@ -90,11 +90,20 @@ export class PlaceRecommender {
       const badgeText = isIndoor ? '실내 공간' : '야외 공간';
       const categoryText = categoryMap[place.category] || '테마 플레이스';
 
+      // 2중 방어선: 카카오 로드 실패 시 대체할 카테고리별 고화질 백업 이미지 정의
+      const fallbackImages = {
+        CULTURE: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=600&q=80',
+        FOOD: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+        HEALING: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=600&q=80',
+        ACTIVITY: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=600&q=80'
+      };
+      const fallbackUrl = fallbackImages[place.category] || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
+
       return `
         <article class="place-card glass glass-hover animate-fade-in" style="animation-delay: ${idx * 0.08}s;">
           <!-- 장소 대표 이미지 -->
           <div class="place-image-wrapper">
-            <img src="${place.imageUrl}" alt="${place.name}" class="place-image" loading="lazy">
+            <img src="${place.imageUrl}" alt="${place.name}" class="place-image" loading="lazy" onerror="this.onerror=null; this.src='${fallbackUrl}';">
             <div class="place-badges">
               <span class="type-badge ${badgeClass}">${badgeText}</span>
               <span class="theme-badge">${categoryText}</span>

@@ -731,8 +731,8 @@ export const ApiService = {
                 if (imgRes.ok) {
                   const imgData = await imgRes.json();
                   if (imgData.documents && imgData.documents.length > 0) {
-                    // 실제 포털/지도의 실시간 대표 썸네일로 교체!
-                    themeImage = imgData.documents[0].image_url || imgData.documents[0].thumbnail_url || themeImage;
+                    // 고속 보안 전송을 보장하는 카카오 자체 CDN 썸네일 주소를 최우선 채택하여 이미지 깨짐 원천 차단!
+                    themeImage = imgData.documents[0].thumbnail_url || imgData.documents[0].image_url || themeImage;
                   }
                 }
               } catch (imgErr) {
