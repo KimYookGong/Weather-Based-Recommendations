@@ -389,7 +389,16 @@ export const ApiService = {
         if (response.status === 401) {
           throw new Error('KAKAO_KEY_INVALID');
         }
-        throw new Error(`Kakao Local API 조회 중 HTTP 오류 발생 (${response.status})`);
+        
+        let errorMsg = `Kakao Local API 조회 중 HTTP 오류 발생 (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.message) {
+            errorMsg += ` - 카카오 서버 피드백: [${errData.message}]`;
+          }
+        } catch (_) {}
+        
+        throw new Error(errorMsg);
       }
       
       let data = await response.json();
@@ -405,7 +414,16 @@ export const ApiService = {
           if (response.status === 401) {
             throw new Error('KAKAO_KEY_INVALID');
           }
-          throw new Error(`Kakao Local Keyword API 오류 (${response.status})`);
+          
+          let errorMsg = `Kakao Local Keyword API 오류 (${response.status})`;
+          try {
+            const errData = await response.json();
+            if (errData && errData.message) {
+              errorMsg += ` - 카카오 서버 피드백: [${errData.message}]`;
+            }
+          } catch (_) {}
+          
+          throw new Error(errorMsg);
         }
         data = await response.json();
       }
