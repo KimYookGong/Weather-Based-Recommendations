@@ -341,17 +341,19 @@ function enrichWeatherData(classifiedId, defaultData) {
   };
 }
 
-// 환경 변수 및 LocalStorage API 키 로더 헬퍼 (Vercel 미치환 플레이스홀더 체크 포함)
+// 환경 변수 및 LocalStorage API 키 로더 헬퍼 (앞뒤 공백 정제 및 Vercel 미치환 플레이스홀더 체크 포함)
 const getOwmApiKey = () => {
   const envKey = typeof process !== 'undefined' && process.env && process.env.REACT_APP_WEATHER_KEY;
-  const key = (envKey && envKey !== '__REACT_APP_WEATHER_KEY__') ? envKey : '';
-  return key || localStorage.getItem('aeroplace_api_key') || '';
+  const key = (envKey && envKey !== '__REACT_APP_WEATHER_KEY__') ? envKey.trim() : '';
+  const localKey = localStorage.getItem('aeroplace_api_key');
+  return key || (localKey ? localKey.trim() : '') || '';
 };
 
 const getKakaoApiKey = () => {
   const envKey = typeof process !== 'undefined' && process.env && process.env.REACT_APP_KAKAO_KEY;
-  const key = (envKey && envKey !== '__REACT_APP_KAKAO_KEY__') ? envKey : '';
-  return key || localStorage.getItem('aeroplace_kakao_key') || '';
+  const key = (envKey && envKey !== '__REACT_APP_KAKAO_KEY__') ? envKey.trim() : '';
+  const localKey = localStorage.getItem('aeroplace_kakao_key');
+  return key || (localKey ? localKey.trim() : '') || '';
 };
 
 // 3. API Export Methods
