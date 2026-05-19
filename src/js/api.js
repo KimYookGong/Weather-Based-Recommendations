@@ -661,7 +661,7 @@ export const ApiService = {
       
       try {
         const fetchJobs = categories.map(async (category) => {
-          const url = `https://dapi.kakao.com/v2/local/search/category.json?category_group_code=${category}&x=${lon}&y=${lat}&radius=2000&sort=popularity&size=4`;
+          const url = `https://dapi.kakao.com/v2/local/search/category.json?category_group_code=${category}&x=${lon}&y=${lat}&radius=2000&sort=accuracy&size=4`;
           const response = await fetch(url, {
             headers: { 'Authorization': `KakaoAK ${kKey}` }
           });
