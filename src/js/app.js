@@ -12,7 +12,11 @@ import { SettingsModal } from './components/SettingsModal.js';
 
 class App {
   constructor() {
-    // 1. 글로벌 상태 (State) 초기화 (기밀 키는 오직 환경 변수 빌드 주입을 바라봅니다)
+    // 1. 보안 안전성: 웹 입력단 제거에 맞추어 기존 브라우저 LocalStorage에 남아있던 레거시 키 찌꺼기 자동 삭제(Purge)
+    localStorage.removeItem('aeroplace_api_key');
+    localStorage.removeItem('aeroplace_kakao_key');
+
+    // 2. 글로벌 상태 (State) 초기화 (기밀 키는 오직 환경 변수 빌드 주입만 의존합니다)
     this.state = {
       apiKey: ApiService.getOwmApiKey(),
       kakaoKey: ApiService.getKakaoApiKey(),
