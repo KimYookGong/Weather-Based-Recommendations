@@ -341,8 +341,111 @@ function enrichWeatherData(classifiedId, defaultData) {
   };
 }
 
+// 환경 변수 및 LocalStorage API 키 로더 헬퍼
+const getOwmApiKey = () => {
+  return (typeof process !== 'undefined' && process.env && process.env.REACT_APP_WEATHER_KEY) 
+         || localStorage.getItem('aeroplace_api_key') 
+         || '';
+};
+
+const getKakaoApiKey = () => {
+  return (typeof process !== 'undefined' && process.env && process.env.REACT_APP_KAKAO_KEY) 
+         || localStorage.getItem('aeroplace_kakao_key') 
+         || '';
+};
+
 // 3. API Export Methods
 export const ApiService = {
+  // 키 가져오기 메소드 노출
+  getOwmApiKey,
+  getKakaoApiKey,
+
+  /**
+   * Kakao Local API를 사용하여 한글 지명/키워드를 위도·경도 좌표로 비동기 변환
+   */
+  async fetchCoordsByKakaoLocal(query, kakaoKey) {
+    const kKey = kakaoKey || getKakaoApiKey();
+    if (!kKey) {
+      throw new Error('KAKAO_KEY_MISSING');
+    }
+    
+    // 1차 주소 검색 시도
+    let url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`;
+    
+    try {
+      let response = await fetch(url, {
+        headers: { 'Authorization': `KakaoAK ${kKey}` }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('KAKAO_KEY_INVALID');
+        }
+        throw new Error(`Kakao Local API 조회 중 HTTP 오류 발생 (${response.status})`);
+      }
+      
+      let data = await response.json();
+      
+      // 주소 검색 결과가 없으면 2차 키워드 검색 시도 (예: '여의도 한강공원', '홍대입구역' 등)
+      if (!data.documents || data.documents.length === 0) {
+        url = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`;
+        response = await fetch(url, {
+          headers: { 'Authorization': `KakaoAK ${kKey}` }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('KAKAO_KEY_INVALID');
+          }
+          throw new Error(`Kakao Local Keyword API 오류 (${response.status})`);
+        }
+        data = await response.json();
+      }
+      
+      if (!data.documents || data.documents.length === 0) {
+        throw new Error('CITY_NOT_FOUND');
+      }
+      
+      const doc = data.documents[0];
+      const addressName = doc.place_name || doc.address_name || query;
+      
+      return {
+        lat: parseFloat(doc.y),
+        lon: parseFloat(doc.x),
+        addressName: addressName
+      };
+    } catch (error) {
+      console.error('fetchCoordsByKakaoLocal Error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 하이브리드 검색 처리: 한국어/복합어 검색 시 Kakao Local을 거치며, 영어/도시명 검색 시 OWM 다이렉트로 날씨 획득
+   */
+  async fetchWeatherBySearchQuery(query, owmKey, kakaoKey) {
+    const wKey = owmKey || getOwmApiKey();
+    const kKey = kakaoKey || getKakaoApiKey();
+    
+    const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(query);
+    
+    // 한국어가 섞여 있거나 Kakao Key가 활성화되어 있는 경우 정밀 카카오 로컬 지오코딩 우선 적용
+    if (kKey && (hasKorean || query.includes(' '))) {
+      const coords = await this.fetchCoordsByKakaoLocal(query, kKey);
+      const weather = await this.fetchWeatherByCoords(coords.lat, coords.lon, wKey);
+      // 영어 이름 대신 정밀 한글 주소/장소명 매핑
+      weather.cityName = coords.addressName;
+      return weather;
+    } 
+    // 그 외는 기존의 OWM 다이렉트 영어 도시 검색 작동
+    else {
+      if (!wKey) {
+        throw new Error('API_KEY_MISSING');
+      }
+      return await this.fetchWeatherByCity(query, wKey);
+    }
+  },
+
   /**
    * Geolocation을 통해 현재 사용자의 위도/경도 획득 (Promise화)
    */

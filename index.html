@@ -16,6 +16,14 @@
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="./src/css/style.css">
+
+  <!-- 브라우저 환경변수 폴백 정의 (웹팩/CRA 빌드 도구 미사용 시 런타임 에러 방지) -->
+  <script>
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
+    window.process.env.REACT_APP_WEATHER_KEY = window.process.env.REACT_APP_WEATHER_KEY || "";
+    window.process.env.REACT_APP_KAKAO_KEY = window.process.env.REACT_APP_KAKAO_KEY || "";
+  </script>
 </head>
 <body class="weather-clear"> <!-- 날씨 상태에 따라 weather-clear, weather-rainy, weather-cloudy, weather-snowy, weather-night 등으로 동적 변경 -->
   

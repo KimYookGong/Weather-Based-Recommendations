@@ -15,6 +15,7 @@ class App {
     // 1. 글로벌 상태 (State) 초기화
     this.state = {
       apiKey: localStorage.getItem('aeroplace_api_key') || '',
+      kakaoKey: localStorage.getItem('aeroplace_kakao_key') || '',
       weatherData: null,
       places: [],
       currentFilter: 'all',
@@ -57,6 +58,7 @@ class App {
     this.dom.btnSettings.addEventListener('click', () => {
       this.settingsModal.show({
         apiKey: this.state.apiKey,
+        kakaoKey: this.state.kakaoKey,
         activeSimId: this.state.activeSimId
       });
     });
@@ -119,17 +121,22 @@ class App {
       } 
       // 분기 [B]: 사용자가 직접 검색창에 특정 도시를 입력한 경우
       else if (this.state.searchCity) {
-        if (!this.state.apiKey) {
+        const owmKey = this.state.apiKey || ApiService.getOwmApiKey();
+        if (!owmKey) {
           throw new Error('API_KEY_REQUIRED_FOR_SEARCH');
         }
-        weather = await ApiService.fetchWeatherByCity(this.state.searchCity, this.state.apiKey);
+        weather = await ApiService.fetchWeatherBySearchQuery(
+          this.state.searchCity,
+          owmKey,
+          this.state.kakaoKey
+        );
       } 
       // 분기 [C]: 사용자의 위도/경도가 감지되었고 실제 API 키가 있는 경우
-      else if (this.state.isCoordsDetected && this.state.lastCoords && this.state.apiKey) {
+      else if (this.state.isCoordsDetected && this.state.lastCoords && (this.state.apiKey || ApiService.getOwmApiKey())) {
         weather = await ApiService.fetchWeatherByCoords(
           this.state.lastCoords.lat,
           this.state.lastCoords.lon,
-          this.state.apiKey
+          this.state.apiKey || ApiService.getOwmApiKey()
         );
       } 
       // 분기 [D]: 그 외의 경우 (기본 위치 기반 데모 모드 자동 구동)
@@ -205,7 +212,7 @@ class App {
    * 설정 변경 및 시뮬레이터 트리거 수신 핸들러
    */
   handleSaveSettings(settings) {
-    // 1. API 키 저장 (LocalStorage 동기화)
+    // 1. OWM API 키 저장 (LocalStorage 동기화)
     this.state.apiKey = settings.apiKey;
     if (settings.apiKey) {
       localStorage.setItem('aeroplace_api_key', settings.apiKey);
@@ -213,10 +220,18 @@ class App {
       localStorage.removeItem('aeroplace_api_key');
     }
 
-    // 2. 수동 검색어 바인딩
+    // 2. Kakao API 키 저장 (LocalStorage 동기화)
+    this.state.kakaoKey = settings.kakaoKey;
+    if (settings.kakaoKey) {
+      localStorage.setItem('aeroplace_kakao_key', settings.kakaoKey);
+    } else {
+      localStorage.removeItem('aeroplace_kakao_key');
+    }
+
+    // 3. 수동 검색어 바인딩
     this.state.searchCity = settings.citySearch;
 
-    // 3. 시뮬레이션 ID 바인딩
+    // 4. 시뮬레이션 ID 바인딩
     this.state.activeSimId = settings.simId;
 
     // 필터 초기화
@@ -239,7 +254,7 @@ class App {
 
     // A. API 키가 만료되거나 유효하지 않은 경우
     if (error.message === 'API_KEY_INVALID') {
-      errorTitle = '잘못된 API Key입니다';
+      errorTitle = '잘못된 OpenWeatherMap Key입니다';
       errorMsg = '입력하신 OpenWeatherMap API Key가 승인되지 않았습니다. 설정을 열어 키를 다시 확인해주세요.';
       actionButtons = `
         <button id="btn-err-settings" class="primary-button">
@@ -250,9 +265,22 @@ class App {
         </button>
       `;
     } 
+    // A-2. 카카오 API 키가 잘못된 경우
+    else if (error.message === 'KAKAO_KEY_INVALID') {
+      errorTitle = '잘못된 Kakao REST Key입니다';
+      errorMsg = '입력하신 Kakao Local REST API Key가 승인되지 않았습니다. 내 애플리케이션의 REST API 키를 정확히 입력했는지 확인해주세요.';
+      actionButtons = `
+        <button id="btn-err-settings" class="primary-button">
+          설정 열기 <i data-lucide="sliders"></i>
+        </button>
+        <button id="btn-err-demo" class="secondary-button">
+          데모 모드로 전환
+        </button>
+      `;
+    }
     // B. 도시를 검색하려는데 API 키가 아예 없는 경우
     else if (error.message === 'API_KEY_REQUIRED_FOR_SEARCH') {
-      errorTitle = '도시 검색을 위해 API Key가 필요합니다';
+      errorTitle = '도시 검색을 위해 OWM Key가 필요합니다';
       errorMsg = '실시간 도시 날씨 조회를 사용하려면 설정을 열고 개인 OpenWeatherMap API Key를 등록해주셔야 합니다.';
       actionButtons = `
         <button id="btn-err-settings" class="primary-button">
@@ -263,10 +291,23 @@ class App {
         </button>
       `;
     }
+    // B-2. 한국어 검색을 시도하는데 카카오 키가 누락된 경우
+    else if (error.message === 'KAKAO_KEY_MISSING') {
+      errorTitle = '한글 주소 검색을 위해 Kakao Key가 필요합니다';
+      errorMsg = `'${this.state.searchCity}'와 같은 한글 지명, 지하철역, 상세 구/동 검색을 수행하려면 Kakao REST API Key가 필요합니다. 설정을 열어 키를 등록하시거나 영문명(예: Seoul)으로 다이렉트 검색해보세요.`;
+      actionButtons = `
+        <button id="btn-err-settings" class="primary-button">
+          설정 열기 <i data-lucide="sliders"></i>
+        </button>
+        <button id="btn-err-demo" class="secondary-button">
+          영문명 다이렉트 검색
+        </button>
+      `;
+    }
     // C. 검색한 도시를 찾을 수 없는 경우
     else if (error.message === 'CITY_NOT_FOUND') {
-      errorTitle = '도시를 찾을 수 없습니다';
-      errorMsg = `'${this.state.searchCity}'에 해당하는 도시를 찾을 수 없습니다. 철자를 다시 확인하시거나 영문명(예: Seoul, New York)으로 검색해보세요.`;
+      errorTitle = '지역을 찾을 수 없습니다';
+      errorMsg = `'${this.state.searchCity}'에 해당하는 행정 구역 또는 검색 결과를 찾을 수 없습니다. 주소 철자를 확인하시거나 보다 널리 알려진 명칭(예: 여의도동, 마포구, Seoul)으로 입력해보세요.`;
       actionButtons = `
         <button id="btn-err-settings" class="primary-button">
           다시 검색 <i data-lucide="search"></i>
@@ -328,6 +369,7 @@ class App {
       btnSettings.addEventListener('click', () => {
         this.settingsModal.show({
           apiKey: this.state.apiKey,
+          kakaoKey: this.state.kakaoKey,
           activeSimId: this.state.activeSimId
         });
       });

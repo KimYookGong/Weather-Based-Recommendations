@@ -77,6 +77,15 @@ AeroPlace는 사용자의 현재 기상 정보를 실시간 분석하여, 오늘
    ```
    이후 브라우저에서 `http://localhost:8000`으로 접속하여 즉시 서비스를 사용하실 수 있습니다.
 
-2. **API 연동 방법**
-   - 우측 상단의 톱니바퀴 아이콘을 누르면 설정 모달이 나타납니다.
-   - 발급 받으신 OpenWeatherMap API Key를 입력하고 '저장 및 적용'을 누르면 실시간 기상 관측 데이터가 서비스에 자동 반영됩니다.
+2. **API 연동 및 환경 변수 설정**
+   - **빌드 타임 환경 변수 (추천)**:
+     - 루트 디렉토리에 `.env` 또는 `.env.local` 파일을 생성합니다.
+     - `.env.example` 템플릿을 참고하여 아래 변수를 세팅한 뒤 빌드(또는 npx 구동)를 진행합니다.
+       ```env
+       REACT_APP_WEATHER_KEY=your_openweathermap_api_key_here
+       REACT_APP_KAKAO_KEY=your_kakao_rest_api_key_here
+       ```
+   - **설정 모달을 통한 런타임 저장**:
+     - 빌드 도구 없이 브라우저로 단독 구동 시, 앱 우측 상단의 톱니바퀴 아이콘(설정)을 눌러 모달 창을 띄웁니다.
+     - **OpenWeatherMap API Key** 및 **Kakao Local REST API Key**를 직접 입력한 뒤 '저장 및 적용'을 클릭하면 브라우저 LocalStorage에 안전하게 동기화되어 실시간 날씨와 정밀 한글 지명 검색 기능이 즉각 활성화됩니다.
+     - **한글 정밀 검색**: Kakao Local API와 유기적으로 하이브리드 연계되어, 기존 OWM 영어 도시 검색의 한계를 극복하고 '여의도동', '망원동', '마포구' 등 정밀한 행정구역 명칭 검색과 위도·경도 기상 연동을 지원합니다.
