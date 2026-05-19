@@ -695,26 +695,37 @@ export const ApiService = {
               reasonComment = `현재 화창하고 선선한 날씨는 야외 산책에 더할 나위 없이 좋은 타이밍입니다. ${doc.distance ? `약 ${doc.distance}m 거리에 있는` : ''} 인기 명소에서 계절의 분위기를 만끽해 보세요!`;
             }
             
-            // 카테고리별 매혹적인 비주얼 이미지 테마 매핑 (Unsplash Curated Premium Assets)
-            let themeImage = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80'; // 기본 카페/레스토랑
+            // 카테고리 그룹 코드에 맞춰 PlaceRecommender 카테고리 규격 동기화
+            let syncCategory = 'HEALING';
             if (doc.category_group_code === 'CT1') {
-              themeImage = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80'; // 문화관/영화관
+              syncCategory = 'CULTURE';
+            } else if (doc.category_group_code === 'CE7' || doc.category_group_code === 'FD6') {
+              syncCategory = 'FOOD';
             } else if (doc.category_group_code === 'AT4') {
-              themeImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'; // 관광명소/바다/산
+              syncCategory = 'HEALING';
+            }
+
+            // 카테고리별 매혹적인 비주얼 이미지 테마 매핑 (Unsplash Curated Premium HD Assets)
+            let themeImage = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80'; // 기본 맛집 다이닝 테이블
+            if (doc.category_group_code === 'CT1') {
+              themeImage = 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=600&q=80'; // 아늑한 갤러리/아트 작품 감상
+            } else if (doc.category_group_code === 'AT4') {
+              themeImage = 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?auto=format&fit=crop&w=600&q=80'; // 싱그러운 야외 공원/랜드마크 분위기
             } else if (doc.category_group_code === 'CE7') {
-              themeImage = 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80'; // 카페
+              themeImage = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80'; // 감성 홈카페/라떼아트 샷
             }
             
             return {
               id: doc.id || `kakao-${idx}`,
-              title: doc.place_name,
-              category: categoryLabel,
+              name: doc.place_name,
+              category: syncCategory,
               type: isIndoor ? 'indoor' : 'outdoor',
               imageUrl: themeImage,
-              tags: [doc.category_group_name || '추천', doc.distance ? `${doc.distance}m` : '인접'],
+              tags: [categoryLabel, doc.distance ? `${doc.distance}m` : '인접'],
               score: (4.6 + (idx * 0.1) % 0.4).toFixed(1), // 실제 인기 명소이므로 신뢰할 수 있는 모킹 평점 부여
               reviewCount: Math.floor(Math.random() * 200) + 40,
               address: doc.road_address_name || doc.address_name || '상세 주소 정보 없음',
+              description: `카카오맵 평점 우수의 인기 ${categoryLabel} 명소인 [${doc.place_name}] 입니다. ${doc.phone ? `매장 문의처: ${doc.phone}` : '상세 정보는 하단 버튼을 클릭해 지도로 바로 감상해보세요!'}`,
               phone: doc.phone || '번호 없음',
               mapUrl: doc.place_url || `https://map.kakao.com/link/search/${encodeURIComponent(doc.place_name)}`,
               reason: reasonComment
