@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroPlace | 날씨 맞춤형 장소 추천 서비스</title>
+  <meta name="description" content="실시간 날씨 데이터를 기반으로 현재 기상 상태에 가장 잘 어울리는 최적의 실내외 장소와 액티비티를 추천받아 보세요.">
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./src/css/style.css">
+</head>
+<body class="weather-clear"> <!-- 날씨 상태에 따라 weather-clear, weather-rainy, weather-cloudy, weather-snowy, weather-night 등으로 동적 변경 -->
+  
+  <!-- 앰비언트 백그라운드 블러 레이어 -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  
+  <!-- 전체 애플리케이션 컨테이너 -->
+  <div id="app" class="app-container">
+    <!-- 헤더 영역 -->
+    <header class="app-header glass">
+      <div class="logo">
+        <i data-lucide="compass" class="logo-icon"></i>
+        <h1>AeroPlace</h1>
+      </div>
+      <div class="header-actions">
+        <!-- 위치 감지 또는 수동 설정 안내 -->
+        <div id="location-indicator" class="location-badge">
+          <i data-lucide="map-pin" class="badge-icon pulse"></i>
+          <span id="current-location-text">위치 감지 중...</span>
+        </div>
+        <button id="btn-settings" class="icon-button glass" title="설정 및 시뮬레이터">
+          <i data-lucide="sliders"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- 에러 표시 컨테이너 (API 오류 등 예외 발생 시 활성화) -->
+    <div id="error-container" class="error-container glass hidden">
+      <!-- 동적으로 에러 UI가 렌더링됨 -->
+    </div>
+
+    <!-- 로딩 스켈레톤 & 메인 레이아웃 -->
+    <main class="app-main">
+      <!-- 1. 날씨 대시보드 컴포넌트가 렌더링될 자리 -->
+      <section id="weather-dashboard-section" class="dashboard-section">
+        <!-- 스켈레톤 로딩 -->
+        <div class="skeleton-dashboard glass">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-grid">
+            <div class="skeleton-circle"></div>
+            <div class="skeleton-block"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 장소 추천 컴포넌트가 렌더링될 자리 -->
+      <section id="place-recommender-section" class="recommender-section">
+        <!-- 필터 탭 스켈레톤 -->
+        <div class="skeleton-tabs">
+          <div class="skeleton-tab"></div>
+          <div class="skeleton-tab"></div>
+          <div class="skeleton-tab"></div>
+        </div>
+        <!-- 추천 장소 카드 리스트 스켈레톤 -->
+        <div class="places-grid-skeleton">
+          <div class="skeleton-card glass">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-line card-title"></div>
+            <div class="skeleton-line card-text"></div>
+          </div>
+          <div class="skeleton-card glass">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-line card-title"></div>
+            <div class="skeleton-line card-text"></div>
+          </div>
+          <div class="skeleton-card glass">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-line card-title"></div>
+            <div class="skeleton-line card-text"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 푸터 영역 -->
+    <footer class="app-footer">
+      <p>&copy; 2026 AeroPlace. Created by Antigravity. Real-time Weather recommendations.</p>
+    </footer>
+  </div>
+
+  <!-- 설정 및 시뮬레이터 모달 컨테이너 -->
+  <div id="settings-modal-container" class="modal-overlay hidden">
+    <!-- 동적으로 모달 마크업이 주입됨 -->
+  </div>
+
+  <!-- Main App Script (ES Module) -->
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
